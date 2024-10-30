@@ -11,6 +11,9 @@ from pyspark.sql.column import Column
 
 
 @f.udf
+def download_url_ufd(url: str, basepath: str, filename: str) -> str:
+    download_url(url, basepath, filename)
+
 def download_url(url: str, basepath: str, filename: str) -> str:
     """
     input:
@@ -27,7 +30,7 @@ def download_url(url: str, basepath: str, filename: str) -> str:
     basepath = Path(basepath)
     if not basepath.exists():
         basepath.mkdir(parents=True, exist_ok=True)
-    full_path = f"{basepath}{filename}"
+    full_path = f"{basepath}/{filename}"
     response = requests.get(url)
     if response.status_code == 200:
         with open(full_path, "wb") as file:
@@ -56,6 +59,6 @@ class DownloadExternalFile(ColumnsTransformation):
 
         filename = f.col(self.filename_column) if self.filename_column else f.expr("uuid()")
 
-        self.df = self.df.withColumn(self.output_location_column, download_url(f.col(self.download_external_file_column), f.col(self.upload_location_column), filename))
+        self.df = self.df.withColumn(self.output_location_column, download_url_ufd(f.col(self.download_external_file_column), f.col(self.upload_location_column), filename))
 
         self.output.df = self.df
