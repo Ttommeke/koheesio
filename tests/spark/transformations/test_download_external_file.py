@@ -38,9 +38,3 @@ def test_download_url():
     with Mocker() as m:
         m.get("https://random.url.todownload/file.txt", content=b"ok", status_code=int(200))
         assert download_url("https://random.url.todownload/file.txt", "/tmp/download_test/", "file_number_1.txt") == "/tmp/download_test/file_number_1.txt"
-
-def main():
-    pytest.main(["-v", __file__])
-
-if __name__ == "__main__":
-    main()
