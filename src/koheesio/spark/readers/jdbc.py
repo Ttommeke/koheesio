@@ -66,7 +66,8 @@ class JdbcReader(Reader):
         "the hostname of the server.",
     )
     user: str = Field(default=..., description="User to authenticate to the server")
-    password: SecretStr = Field(default=..., description="Password belonging to the username")
+    password: Optional[SecretStr] = Field(default=None, description="Password belonging to the username")
+    private_key: Optional[SecretStr] = Field(default=None, alias="pem_private_key", description="Private key for authentication")
     dbtable: Optional[str] = Field(
         default=None, description="Database table name, also include schema name", alias="table"
     )
@@ -79,13 +80,16 @@ class JdbcReader(Reader):
 
         Note: override this method if driver requires custom names, e.g. Snowflake: `sfUrl`, `sfUser`, etc.
         """
-        return {
+
+        __opts = {
             "driver": self.driver,
             "url": self.url,
             "user": self.user,
-            "password": self.password,
+            "password": self.password if self.password else None,
+            "private_key": self.private_key if self.private_key else None,
             **self.options,
         }
+        return {k:v for k,v in __opts.items() if v is not None and v != ""}
 
     def execute(self):
         """Wrapper around Spark's jdbc read format"""
@@ -101,6 +105,9 @@ class JdbcReader(Reader):
 
         if pw := self.password:
             options["password"] = pw.get_secret_value()
+        if pk := self.private_key:
+            options["pem_private_key"] = pk.get_secret_value()
+            options["private_key"] = pk.get_secret_value()
 
         if query := self.query:
             options["query"] = query

@@ -152,7 +152,7 @@ class SnowflakeBaseModel(BaseModel, ExtraParamsMixin, ABC):
         examples=["example.snowflakecomputing.com"],
     )
     user: str = Field(default=..., alias="sfUser", description="Login name for the Snowflake user")
-    password: SecretStr = Field(default=..., alias="sfPassword", description="Password for the Snowflake user")
+    private_key: SecretStr = Field(default=..., alias="pem_private_key", description="Private key for the Snowflake user")
     authenticator: Optional[str] = Field(
         default=None,
         description="Authenticator for the Snowflake user",
@@ -187,7 +187,8 @@ class SnowflakeBaseModel(BaseModel, ExtraParamsMixin, ABC):
             for key, value in {
                 "sfURL": self.url,
                 "sfUser": self.user,
-                "sfPassword": self.password.get_secret_value(),
+                "pem_private_key": self.private_key.get_secret_value(),
+                "private_key": self.private_key.get_secret_value(),
                 "authenticator": self.authenticator,
                 "sfDatabase": self.database,
                 "sfSchema": self.sfSchema,
